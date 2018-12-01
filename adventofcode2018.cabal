@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
+                     , containers
   exposed-modules:     Day1
 
 test-suite tests
@@ -28,5 +29,6 @@ test-suite tests
    default-language:    Haskell2010
    build-depends:       base >= 4.7 && < 5
                       , hspec
+                      , containers
    other-modules:       Day1
                       , Day1Spec
