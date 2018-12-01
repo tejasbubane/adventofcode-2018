@@ -1,3 +1,5 @@
 # Advent of Code - 2018
 
+[![Build Status](https://travis-ci.org/tejasbubane/adventofcode-2018.svg?branch=master)](https://travis-ci.org/tejasbubane/adventofcode-2018)
+
 My solutions to problems in [Advent of Code 2018](https://adventofcode.com/2018/) in [Haskell](https://www.haskell.org/).
