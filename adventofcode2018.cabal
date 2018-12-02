@@ -19,6 +19,7 @@ library
   build-depends:       base >= 4.7 && < 5
                      , containers
   exposed-modules:     Day1
+                     , Day2
 
 test-suite tests
    ghc-options:         -Wall
@@ -32,3 +33,5 @@ test-suite tests
                       , containers
    other-modules:       Day1
                       , Day1Spec
+                      , Day2
+                      , Day2Spec
