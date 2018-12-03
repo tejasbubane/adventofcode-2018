@@ -9,7 +9,7 @@ specs = describe "Day 3" $ do
     it "works for example claims" $ do
       countCommon testClaims `shouldBe` 4
     it "works for puzzle claims" $ do
-      countCommon puzzleClaims `shouldBe` 4
+      countCommon puzzleClaims `shouldBe` 119551
 
 -- inputs
 

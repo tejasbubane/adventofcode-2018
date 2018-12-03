@@ -3,50 +3,37 @@
 module Day3 where
 
 import Text.Trifecta
-import Prelude hiding (id)
-import Data.Traversable (sequenceA)
-import Data.Matrix
+import Prelude hiding (filter)
+import Data.Map
 
-data Claim = Claim {
-  id     :: Integer,
-  xStart :: Integer,
-  yStart :: Integer,
-  xEnd   :: Integer,
-  yEnd   :: Integer
-} deriving (Eq, Show)
-
-makeClaim :: Parser Claim
+makeClaim :: Parser [(Integer, Integer)]
 makeClaim = do
   _ <- char '#'
-  i <- integer
+  _id <- integer
   _ <- char '@'
   _ <- char ' '
-  x <- integer
+  xs <- integer
   _ <- char ','
-  y <- integer
+  ys <- integer
   _ <- char ':'
   _ <- char ' '
   width <- integer
   _ <- char 'x'
   height <- integer
-  return $ Claim {id=i, xStart=x+1, yStart=y+1, xEnd=x+width, yEnd=y+height}
+  let x1 = xs + 1
+      y1 = ys + 1
+      x2 = xs + width
+      y2 = ys + height
+    in return $ [(x, y) | x <- [x1..x2], y <- [y1..y2]]
 
-makeClaims :: [String] -> [Claim]
-makeClaims xs =
-  case sequenceA . map (parseString makeClaim mempty) $ xs of
-    Success a -> a
-    Failure err -> error "could not parse input!"
+countCommonRec :: Map (Integer, Integer) Integer -> [String] -> Int
+countCommonRec acc [] = size $ filter (> 1) acc
+countCommonRec acc (x:xs) =
+  case parseString makeClaim mempty x of
+    Success a ->
+      let claimSet = fromList [(k, 1) | k <- a]
+      in countCommonRec (unionWith (+) acc claimSet) xs
+    Failure _ -> error "could not parse input!"
 
--- Check point is within range
-within :: Int -> Integer -> Integer -> Bool
-within i x1 x2 = fromIntegral(i) >= x1 && fromIntegral(i) <= x2
-
-claimMatrix :: Claim -> Matrix Integer
-claimMatrix (Claim {xStart=xStart, yStart=yStart, xEnd=xEnd, yEnd=yEnd}) =
-  matrix 1000 1000 (\(x, y) -> if within x xStart xEnd && within y yStart yEnd then 1 else 0)
-
-commonArea :: [String] -> Matrix Integer
-commonArea = foldl (+) (zero 1000 1000) . map claimMatrix . makeClaims
-
-countCommon :: [String] -> Integer
-countCommon = foldr (\x acc -> if x >= 2 then acc + 1 else acc) 0 . commonArea
+countCommon :: [String] -> Int
+countCommon = countCommonRec empty
