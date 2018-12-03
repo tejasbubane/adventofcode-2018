@@ -11,6 +11,12 @@ specs = describe "Day 3" $ do
     it "works for puzzle claims" $ do
       countCommon puzzleClaims `shouldBe` 119551
 
+  describe "part 2 - single non-overlapping claim" $ do
+    it "works for example claims" $ do
+      findIntact testClaims `shouldBe` 3
+    it "works for puzzle claims" $ do
+      findIntact puzzleClaims `shouldBe` 1124
+
 -- inputs
 
 testClaims :: [String]
