@@ -20,27 +20,28 @@ library
                      , containers
                      , trifecta
                      , parsers
-                     , matrix
+                     , dates
   exposed-modules:     Day1
                      , Day2
                      , Day3
+                     , Day4
 
 test-suite tests
-   ghc-options:         -Wall
-   default-extensions:  OverloadedStrings
-   type:                exitcode-stdio-1.0
-   hs-source-dirs:      spec, src
-   main-is:             Spec.hs
-   default-language:    Haskell2010
-   build-depends:       base >= 4.7 && < 5
-                      , hspec
-                      , containers
-                      , trifecta
-                      , parsers
-                      , matrix
-   other-modules:       Day1
-                      , Day1Spec
-                      , Day2
-                      , Day2Spec
-                      , Day3
-                      , Day3Spec
+  ghc-options:         -Wall
+  default-extensions:  OverloadedStrings
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      spec, src
+  main-is:             Spec.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                     , hspec
+                     , containers
+                     , trifecta
+                     , parsers
+                     , dates
+  other-modules:       Day1
+                     , Day1Spec
+                     , Day2
+                     , Day2Spec
+                     , Day3
+                     , Day3Spec
