@@ -1,11 +1,13 @@
-module Day4 where
+module Day4 (solution1) where
 
 import Text.Trifecta
 import Data.Dates
-import Control.Applicative
+import Control.Applicative hiding (empty)
 import Data.Traversable (sequenceA)
-import Data.List (sortBy)
+import Data.List (sortBy, maximumBy)
 import Data.Ord (comparing)
+import Data.Map
+import Data.Maybe (fromMaybe)
 
 data EventType = BeginShift Integer | FallAsleep | WakeUp deriving (Show)
 data Event =
@@ -53,28 +55,36 @@ parseEvent = do
 
 sortedEvents :: [String] -> [Event]
 sortedEvents xs =
-  case sequenceA $ map (parseString parseEvent mempty) xs of
+  case sequenceA $ Prelude.map (parseString parseEvent mempty) xs of
     Success a -> sortBy (comparing timestamp) a
     Failure _ -> error $ "could not parse input!"
 
-exampleInput :: [String]
-exampleInput =
-  [
-      "[1518-11-01 00:00] Guard #10 begins shift"
-    , "[1518-11-01 00:05] falls asleep"
-    , "[1518-11-01 00:25] wakes up"
-    , "[1518-11-01 00:30] falls asleep"
-    , "[1518-11-01 00:55] wakes up"
-    , "[1518-11-01 23:58] Guard #99 begins shift"
-    , "[1518-11-02 00:40] falls asleep"
-    , "[1518-11-02 00:50] wakes up"
-    , "[1518-11-03 00:05] Guard #10 begins shift"
-    , "[1518-11-03 00:24] falls asleep"
-    , "[1518-11-03 00:29] wakes up"
-    , "[1518-11-04 00:02] Guard #99 begins shift"
-    , "[1518-11-04 00:36] falls asleep"
-    , "[1518-11-04 00:46] wakes up"
-    , "[1518-11-05 00:03] Guard #99 begins shift"
-    , "[1518-11-05 00:45] falls asleep"
-    , "[1518-11-05 00:55] wakes up"
-  ]
+type SleepRanges = Map Integer [(Int, Int)]
+
+maxFromMap :: Map Int Int -> Int
+maxFromMap = undefined
+
+sleepRanges :: Integer -> SleepRanges -> [Event] -> SleepRanges
+sleepRanges currentId acc [] = acc
+sleepRanges _ acc ((Event {eventType=(BeginShift i)}):es) = sleepRanges i acc es
+sleepRanges i acc (Event {eventType=FallAsleep, timestamp=t1}:Event {eventType=WakeUp, timestamp=t2}:es) =
+  sleepRanges i (insertWith (++) i [(minute t1, minute t2)] acc) es
+
+maxSleeper :: SleepRanges -> Integer
+maxSleeper =
+  fst . maximumBy (comparing snd) . toList . Data.Map.map sumRanges where
+    sumRanges = Prelude.foldr (\(x1, x2) acc -> acc + (x2 - x1)) 0
+
+mostSleepingMinute :: SleepRanges -> Integer -> Integer
+mostSleepingMinute ss i =
+  let rs = fromMaybe [] $ Data.Map.lookup i ss
+      es = concat [[x1..(x2 - 1)] | (x1, x2) <- rs]
+      calcRec = Prelude.foldr (\x acc -> insertWith (+) x 1 acc)
+  in fromIntegral . fst . maximumBy (comparing snd) . toList $ calcRec empty es
+
+solution1 :: [String] -> Integer
+solution1 xs =
+  let events = sortedEvents xs
+      ranges = sleepRanges 0 empty events
+      i      = maxSleeper ranges
+  in i * (mostSleepingMinute ranges i)

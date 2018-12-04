@@ -45,3 +45,5 @@ test-suite tests
                      , Day2Spec
                      , Day3
                      , Day3Spec
+                     , Day4
+                     , Day4Spec
