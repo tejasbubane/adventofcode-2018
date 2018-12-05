@@ -9,7 +9,13 @@ import Data.Ord (comparing)
 import Data.Map
 import Data.Maybe (fromMaybe)
 
-data EventType = BeginShift Integer | FallAsleep | WakeUp deriving (Show)
+-- Aliases
+type Minute      = Int
+type Guard       = Integer
+type SleepRanges = Map Guard [(Minute, Minute)] -- timerange in which guard sleeps
+
+-- Domain Types
+data EventType = BeginShift Guard | FallAsleep | WakeUp deriving (Show)
 data Event =
   Event {
       timestamp :: DateTime
@@ -21,15 +27,15 @@ integral = fromIntegral <$> integer
 
 date :: Parser DateTime
 date = do
-  year <- integral
+  y <- integral
   _ <- char '-'
-  month <- integral
+  m <- integral
   _ <- char '-'
-  day <- integral
-  hour <- integral
+  d <- integral
+  h <- integral
   _ <- char ':'
   mins <- integral
-  return $ DateTime { year=year, month=month, day=day, hour=hour, minute=mins, second=0 }
+  return $ DateTime { year=y, month=m, day=d, hour=h, minute=mins, second=0 }
 
 beginShift :: Parser EventType
 beginShift = do
@@ -59,32 +65,37 @@ sortedEvents xs =
     Success a -> sortBy (comparing timestamp) a
     Failure _ -> error $ "could not parse input!"
 
-type SleepRanges = Map Integer [(Int, Int)]
+sleepRanges :: Guard -> SleepRanges -> [Event] -> SleepRanges
+sleepRanges _ acc [] = acc
+sleepRanges _ acc ((Event {eventType=(BeginShift gid)}):es) = sleepRanges gid acc es
+sleepRanges gid acc (Event {eventType=FallAsleep, timestamp=t1}:Event {eventType=WakeUp, timestamp=t2}:es) =
+  sleepRanges gid (insertWith (++) gid [(minute t1, minute t2)] acc) es
+sleepRanges _ _ _ = error "FallAsleep should be followed by WakeUp"
 
-maxFromMap :: Map Int Int -> Int
-maxFromMap = undefined
+ranges :: [String] -> SleepRanges
+ranges xs =
+  let events = sortedEvents xs
+  in sleepRanges 0 empty events
 
-sleepRanges :: Integer -> SleepRanges -> [Event] -> SleepRanges
-sleepRanges currentId acc [] = acc
-sleepRanges _ acc ((Event {eventType=(BeginShift i)}):es) = sleepRanges i acc es
-sleepRanges i acc (Event {eventType=FallAsleep, timestamp=t1}:Event {eventType=WakeUp, timestamp=t2}:es) =
-  sleepRanges i (insertWith (++) i [(minute t1, minute t2)] acc) es
-
-maxSleeper :: SleepRanges -> Integer
+-- Find guard which sleeps for the maximum time
+maxSleeper :: SleepRanges -> Guard
 maxSleeper =
   fst . maximumBy (comparing snd) . toList . Data.Map.map sumRanges where
     sumRanges = Prelude.foldr (\(x1, x2) acc -> acc + (x2 - x1)) 0
 
-mostSleepingMinute :: SleepRanges -> Integer -> Integer
-mostSleepingMinute ss i =
-  let rs = fromMaybe [] $ Data.Map.lookup i ss
-      es = concat [[x1..(x2 - 1)] | (x1, x2) <- rs]
+-- number of times given guard slept each minute
+sleepingMinutes :: [(Minute, Minute)] -> Map Minute Int
+sleepingMinutes rs =
+  let es = concat [[x1..(x2 - 1)] | (x1, x2) <- rs]
       calcRec = Prelude.foldr (\x acc -> insertWith (+) x 1 acc)
-  in fromIntegral . fst . maximumBy (comparing snd) . toList $ calcRec empty es
+  in  calcRec empty es
+
+maxOccurrence :: [(Minute, Int)] -> Minute
+maxOccurrence = fst . maximumBy (comparing snd)
 
 solution1 :: [String] -> Integer
 solution1 xs =
-  let events = sortedEvents xs
-      ranges = sleepRanges 0 empty events
-      i      = maxSleeper ranges
-  in i * (mostSleepingMinute ranges i)
+  let rs = ranges xs
+      i = maxSleeper rs
+      mins = fromMaybe [] $ Data.Map.lookup i rs
+  in i * (fromIntegral . maxOccurrence . toList $ sleepingMinutes mins)
