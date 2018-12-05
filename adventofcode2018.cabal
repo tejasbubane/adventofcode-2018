@@ -25,6 +25,7 @@ library
                      , Day2
                      , Day3
                      , Day4
+                     , Day5
 
 test-suite tests
   ghc-options:         -Wall
@@ -47,3 +48,5 @@ test-suite tests
                      , Day3Spec
                      , Day4
                      , Day4Spec
+                     , Day5
+                     , Day5Spec
