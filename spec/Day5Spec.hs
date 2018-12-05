@@ -16,6 +16,13 @@ specs = describe "Day 5" $ do
     it "works for puzzle input" $ do
       streamReduce puzzleInput `shouldBe` 11298
 
+  describe "Part 2 - max reduction" $ do
+    it "works for example input" $ do
+      streamMaxReduce exampleInput `shouldBe` 4
+    it "works for puzzle input" $ do
+      streamMaxReduce puzzleInput `shouldBe` 5148
+
+
 exampleInput :: String
 exampleInput = "dabAcCaCBAcCcaDA"
 
