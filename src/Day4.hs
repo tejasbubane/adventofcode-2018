@@ -1,4 +1,4 @@
-module Day4 (solution1) where
+module Day4 (solution1, solution2) where
 
 import Text.Trifecta
 import Data.Dates
@@ -99,3 +99,13 @@ solution1 xs =
       i = maxSleeper rs
       mins = fromMaybe [] $ Data.Map.lookup i rs
   in i * (fromIntegral . maxOccurrence . toList $ sleepingMinutes mins)
+
+maxSleptMinute :: SleepRanges -> (Guard, Minute)
+maxSleptMinute ss =
+  maximumBy (comparing snd) . toList $ Data.Map.map (\rs -> maxOccurrence (toList $ sleepingMinutes rs)) ss
+
+solution2 :: [String] -> Integer
+solution2 xs =
+  let rs = ranges xs
+      (guard, m) = maxSleptMinute rs
+  in (fromIntegral guard) * (fromIntegral m)

@@ -11,6 +11,12 @@ specs = describe "Day 4" $ do
     it "works with puzzle input" $ do
       solution1 puzzleInput `shouldBe` 131469
 
+  describe "Part 1" $ do
+    it "works with example input" $ do
+      solution2 exampleInput `shouldBe` 4455
+    it "works with puzzle input" $ do
+      solution2 puzzleInput `shouldBe` 96951
+
 exampleInput :: [String]
 exampleInput =
   [
