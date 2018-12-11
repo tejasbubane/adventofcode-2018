@@ -5,11 +5,17 @@ import Day6
 
 specs :: SpecWith ()
 specs = describe "Day 6" $ do
-  describe "Part 1 - safest area" $ do
+  describe "Part 1 - max area" $ do
     it "works for sample input" $ do
       maxArea exampleInput `shouldBe` 17
     it "works for puzzle input" $ do
       maxArea puzzleInput `shouldBe` 4754
+
+  describe "Part 2 - safest area" $ do
+    it "works for sample input" $ do
+      safeArea exampleInput 32 `shouldBe` 16
+    it "works for puzzle input" $ do
+      safeArea puzzleInput 10000 `shouldBe` 42344
 
 exampleInput :: [(Int, Int)]
 exampleInput =

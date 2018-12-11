@@ -1,4 +1,4 @@
-module Day6 (maxArea) where
+module Day6 (maxArea, safeArea) where
 
 import Data.List (minimumBy, maximumBy, sortBy)
 import Data.Ord (comparing)
@@ -69,9 +69,20 @@ deleteEdges :: [Coordinate] -> Map Location [Coordinate] -> Map Location [Coordi
 deleteEdges [] mc = mc
 deleteEdges (x:xs) mc = deleteEdges xs (Data.Map.filter (notElem x) mc)
 
+-- part 1 output
 maxArea :: Locations -> Int
 maxArea ps =
   let gl = limits ps
       gridMap = calcArea (grid gl) ps empty
       innerArea = deleteEdges (outline gl) gridMap
   in snd $ maximumBy (comparing snd) . toList $ Data.Map.map length innerArea
+
+-- sum of distances of coordinate from all locations
+sumDistances :: Coordinate -> Locations -> Int
+sumDistances c = sum . Prelude.map (distance c)
+
+-- part 2 output
+safeArea :: Locations -> Int -> Int
+safeArea ps threshold =
+  let gr = grid (limits ps)
+  in length . Prelude.filter (\p -> sumDistances p ps < threshold) $ gr
