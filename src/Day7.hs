@@ -1,12 +1,13 @@
 module Day7 where
 
 import Text.Trifecta
-import Data.List ((\\), sort, nub, delete)
+import Data.List ((\\), sort, nub, delete, findIndex)
 import Data.Traversable (sequenceA)
 import Data.Map hiding (map, (\\), union, singleton, toList, delete)
 import Data.Set hiding (map, (\\), delete)
+import Data.Char (ord)
 
-type Prerequisite = (Char, Char)
+type Prerequisite = (Char, Char) -- (after, before)
 
 -- parse single prerequisite requirement
 parsePrerequisite :: Parser Prerequisite
@@ -43,24 +44,87 @@ prerequisiteMap ps =
 
 -- Returns next task (char) to be selected and unlocked tasks after selecting it
 -- based on sorting alpabetically and also checking if all requirements are met
-next :: Map Char (Set Char) -> [Char] -> [Char] -> (Char, [Char])
-next _ [] _ = error "no available chars given"
-next instrns available acc =
+next :: Map Char (Set Char) -> [Char] -> [Char] -> Maybe (Char, [Char])
+next _ [] _ = Nothing
+next instrns available done =
   let (first:rest) = sort available
       nextAvailable = keys $ Data.Map.filter (elem first) instrns
   in case Data.Map.lookup first instrns of
-    Nothing -> (first, nextAvailable) -- root element does not have any befores
-    Just a  -> if toList a \\ acc == []
-               then (first, nextAvailable)
-               else next instrns rest acc
+    Nothing -> Just (first, nextAvailable) -- root element does not have any befores
+    Just a  -> if toList a \\ done == []
+               then Just (first, nextAvailable)
+               else next instrns rest done
 
 traverseGraph :: Map Char (Set Char) -> [Char] -> [Char] -> [Char]
-traverseGraph _ [] acc = reverse acc
-traverseGraph instrns available acc =
-  let (nxt, nextAvailable) = next instrns available acc
-  in traverseGraph instrns (nub $ delete nxt available ++ nextAvailable) (nxt:acc)
+traverseGraph _ [] done = reverse done
+traverseGraph instrns available done =
+  case next instrns available done of
+    Nothing -> error "nothing left to take next" -- This case should not appear part 1
+    Just (nxt, nextAvailable) ->
+      traverseGraph instrns (nub $ delete nxt available ++ nextAvailable) (nxt:done)
 
 order :: [String] -> [Char]
 order xs =
   let is = prerequisites xs
   in traverseGraph (prerequisiteMap is) (roots is) []
+
+
+-- Part 2
+
+type Workers = [(Char, Int)] -- [(job, timeleft)]
+
+decrement :: Workers -> Workers
+decrement = (fmap . fmap) (\x -> if x > 0 then x - 1 else x)
+
+timeReqd :: Char -> Int
+timeReqd c = ord c - 64
+
+assign :: Workers -> Int -> Char -> Workers
+assign workers idx c = Prelude.take idx workers ++ [(c, timeReqd c)] ++ Prelude.drop (idx + 1) workers
+
+getCompleted :: Workers -> [Char]
+getCompleted ws = Prelude.map fst $ Prelude.filter (\w -> snd w == 1) ws
+
+assignAll :: Workers -> [Char] -> Workers
+assignAll ws [] = ws
+assignAll ws available =
+  case Data.List.findIndex (\w -> snd w == 0) ws of
+    Nothing -> ws -- all workers busy
+    Just i  ->
+      let nxt = head $ sort available
+          newWorkers = assign ws i nxt
+      in assignAll newWorkers (delete nxt available)
+
+jobCount :: Map Char (Set Char) -> Int
+jobCount instrns =
+  length $ (Data.Map.foldr union Data.Set.empty instrns) `union` Data.Set.fromList (keys instrns)
+
+performConstruction :: Map Char (Set Char) -> [Char] -> [Char] -> Workers -> Int -> Int
+performConstruction instrns available done workers counter
+  -- All jobs done - halt
+  | jobCount instrns == length done = counter
+  -- jobs still pending completion - recurse
+  | otherwise =
+    let newDone       = getCompleted workers
+        newWorkers    = assignAll (decrement workers) available
+        nextAvailable = \j -> keys $ Data.Map.filter (elem j) instrns
+        newAvailable  = nub $ concat . map nextAvailable $ newDone
+    in performConstruction instrns newAvailable newDone newWorkers (counter + 1)
+
+exampleInput :: [String]
+exampleInput =
+  [
+    "Step C must be finished before step A can begin."
+  , "Step C must be finished before step F can begin."
+  , "Step A must be finished before step B can begin."
+  , "Step A must be finished before step D can begin."
+  , "Step B must be finished before step E can begin."
+  , "Step D must be finished before step E can begin."
+  , "Step F must be finished before step E can begin."
+  ]
+
+constructionTime :: [String] -> Int -> Int
+constructionTime ps workerCount =
+  let is = prerequisites ps
+      initWorkers = Prelude.map ((,) '.') $ Prelude.take workerCount $ repeat 0
+  in performConstruction (prerequisiteMap is) (roots is) [] initWorkers 0

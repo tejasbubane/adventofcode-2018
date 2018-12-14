@@ -11,6 +11,12 @@ specs = describe "Day 7" $ do
     it "works for puzzle input" $ do
       order puzzleInput `shouldBe` "BKCJMSDVGHQRXFYZOAULPIEWTN"
 
+  describe "Part 2" $ do
+    it "works for example input" $ do
+      constructionTime exampleInput 2 `shouldBe` 15
+    it "works for puzzle input" $ do
+      constructionTime puzzleInput 5 `shouldBe` 0
+
 exampleInput :: [String]
 exampleInput =
   [
