@@ -111,18 +111,6 @@ performConstruction instrns available done workers counter
         newAvailable  = nub $ concat . map nextAvailable $ newDone
     in performConstruction instrns newAvailable newDone newWorkers (counter + 1)
 
-exampleInput :: [String]
-exampleInput =
-  [
-    "Step C must be finished before step A can begin."
-  , "Step C must be finished before step F can begin."
-  , "Step A must be finished before step B can begin."
-  , "Step A must be finished before step D can begin."
-  , "Step B must be finished before step E can begin."
-  , "Step D must be finished before step E can begin."
-  , "Step F must be finished before step E can begin."
-  ]
-
 constructionTime :: [String] -> Int -> Int
 constructionTime ps workerCount =
   let is = prerequisites ps

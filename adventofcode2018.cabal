@@ -21,6 +21,7 @@ library
                      , trifecta
                      , parsers
                      , dates
+                     , array
   exposed-modules:     Day1
                      , Day2
                      , Day3
@@ -29,6 +30,7 @@ library
                      , Day6
                      , Day7
                      , Day9
+                     , Day16
 
 test-suite tests
   ghc-options:         -Wall
@@ -43,6 +45,8 @@ test-suite tests
                      , trifecta
                      , parsers
                      , dates
+                     , array
+                     , raw-strings-qq
   other-modules:       Day1
                      , Day1Spec
                      , Day2
@@ -57,3 +61,5 @@ test-suite tests
                      , Day6Spec
                      , Day7
                      , Day7Spec
+                     , Day16
+                     , Day16Spec
