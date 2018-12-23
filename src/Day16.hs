@@ -1,12 +1,19 @@
 module Day16 where
 
+import Text.Trifecta
 import Data.Array
 import Data.Bits
-import Text.Trifecta
+import qualified Data.Map as M
+import qualified Data.Set as S
+import Data.Maybe
 
 type Register = Array Int Int
 type Instruction = (Int, Int, Int, Int)
 type Computation = Register -> Instruction -> Register
+data OpCode =
+    Addr | Addi | Mulr | Muli | Banr | Bani | Borr | Bori
+  | Setr | Seti | Gtir | Gtri | Gtrr | Eqir | Eqri | Eqrr
+  deriving (Eq, Ord, Show)
 
 -- Parsers
 parseRegister :: Parser Register
@@ -18,8 +25,17 @@ parseRegister = do
 
 parseInstr :: Parser Instruction
 parseInstr = do
-  [op, a, b, c] <- (fmap . fmap) fromIntegral (sepBy integer whiteSpace)
-  return $ (op, a, b, c)
+  op <- decimal
+  _ <- space
+  a <- decimal
+  _ <- space
+  b <- decimal
+  _ <- space
+  c <- decimal
+  return $ (fromIntegral op, fromIntegral a, fromIntegral b, fromIntegral c)
+
+parseInstrs :: Parser [Instruction]
+parseInstrs = (many $ parseInstr <* newline) <* eof
 
 parseComputation :: Parser (Register, Instruction, Register)
 parseComputation = do
@@ -28,20 +44,70 @@ parseComputation = do
   before <- parseRegister
   _ <- newline
   instr <- parseInstr
+  _ <- newline
   _ <- string "After:  "
   after <- parseRegister
   skipMany newline
   return $ (before, instr, after)
 
--- Matchings
-matchCount :: (Register, Instruction, Register) -> Int
-matchCount (before, instr, after) =
-  let ops = [addr, addi, mulr, muli, banr, bani, borr, bori, setr, seti,
-             gtir, gtri, gtrr, eqir, eqri, eqrr]
-  in length $ filter (\f -> (f before instr) == after) ops
+matchOps :: (Register, Instruction, Register) -> [OpCode]
+matchOps (before, instr, after) =
+  let ops =
+        [
+          (Addr , addr), (Addi, addi), (Mulr, mulr), (Muli, muli)
+        , (Banr, banr), (Bani, bani), (Borr, borr), (Bori, bori)
+        , (Setr, setr), (Seti, seti), (Gtir, gtir), (Gtri, gtri), (Gtrr, gtrr)
+        , (Eqir, eqir), (Eqri, eqri), (Eqrr, eqrr)
+        ]
+  in map fst $ filter (\(_, f) -> (f before instr) == after) ops
 
+-- How many have more than 3 opcodes matching?
 part1 :: [(Register, Instruction, Register)] -> Int
-part1 = length . filter (>=3) . map matchCount
+part1 = length . filter (>=3) . map (length . matchOps)
+
+opcodes :: [(Register, Instruction, Register)] -> M.Map Int (S.Set OpCode)
+opcodes xs = foldr go M.empty xs where
+  go computation@(_, (op, _, _, _), _) acc =
+    M.insertWith S.intersection op (S.fromList $ matchOps computation) acc
+
+finalizeOpcodes :: M.Map Int (S.Set OpCode) -> M.Map Int OpCode
+finalizeOpcodes codes = go codes M.empty where
+  go remCodes acc =
+    let singularCodes = filter (\(_, v) -> (S.size v) == 1) $ M.toList remCodes
+        -- these codes belong to single number - hence final
+    in
+      if length singularCodes == 0
+      then acc
+      else
+        let (num, opset) = head $ singularCodes
+            opcode = head $ S.toList opset
+            newRemCodes = M.map (S.delete opcode) remCodes
+        in go newRemCodes $ M.insert num opcode acc
+
+-- Figure out opcode numbers and run sample program
+part2 :: M.Map Int OpCode -> [Instruction] -> Register
+part2 codes instrs = foldl compute (listArray (0,3) [0,0,0,0]) instrs where
+  compute reg instr@(op, _, _, _) =
+    let computation = comp (fromMaybe undefined $ M.lookup op codes)
+    in computation reg instr
+
+comp :: OpCode -> Computation
+comp Addr = addr
+comp Addi = addi
+comp Mulr = mulr
+comp Muli = muli
+comp Banr = banr
+comp Bani = bani
+comp Bori = bori
+comp Borr = borr
+comp Setr = setr
+comp Seti = seti
+comp Gtir = gtir
+comp Gtri = gtri
+comp Gtrr = gtrr
+comp Eqir = eqir
+comp Eqri = eqri
+comp Eqrr = eqrr
 
 -- Register Operations
 performr :: (Int -> Int -> Int) -> Computation
