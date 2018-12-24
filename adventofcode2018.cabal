@@ -48,6 +48,7 @@ test-suite tests
                      , dates
                      , array
                      , raw-strings-qq
+                     , split
   other-modules:       Day1
                      , Day1Spec
                      , Day2
