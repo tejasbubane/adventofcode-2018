@@ -30,6 +30,7 @@ library
                      , Day6
                      , Day7
                      , Day9
+                     , Day14
                      , Day16
 
 test-suite tests
@@ -61,5 +62,7 @@ test-suite tests
                      , Day6Spec
                      , Day7
                      , Day7Spec
+                     , Day14
+                     , Day14Spec
                      , Day16
                      , Day16Spec
